@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A922C955256C6E1100235835 /* SessionGoing+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A922C953256C6E1100235835 /* SessionGoing+CoreDataClass.swift */; };
+		A922C956256C6E1100235835 /* SessionGoing+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = A922C954256C6E1100235835 /* SessionGoing+CoreDataProperties.swift */; };
 		A93BE2D2256A3CE3002AF675 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93BE2D1256A3CE3002AF675 /* AppDelegate.swift */; };
 		A93BE2D4256A3CE3002AF675 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93BE2D3256A3CE3002AF675 /* SceneDelegate.swift */; };
 		A93BE2D6256A3CE3002AF675 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93BE2D5256A3CE3002AF675 /* ViewController.swift */; };
@@ -14,9 +16,14 @@
 		A93BE2DC256A3CE3002AF675 /* ComplicatedDataStack.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A93BE2DA256A3CE3002AF675 /* ComplicatedDataStack.xcdatamodeld */; };
 		A93BE2DE256A3CE5002AF675 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A93BE2DD256A3CE5002AF675 /* Assets.xcassets */; };
 		A93BE2E1256A3CE5002AF675 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A93BE2DF256A3CE5002AF675 /* LaunchScreen.storyboard */; };
+		A93BE2EB256A3F01002AF675 /* Session+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93BE2E9256A3F01002AF675 /* Session+CoreDataClass.swift */; };
+		A93BE2EC256A3F01002AF675 /* Session+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93BE2EA256A3F01002AF675 /* Session+CoreDataProperties.swift */; };
+		A9945B63256A60D100E03762 /* DataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9945B62256A60D100E03762 /* DataSource.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A922C953256C6E1100235835 /* SessionGoing+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionGoing+CoreDataClass.swift"; sourceTree = "<group>"; };
+		A922C954256C6E1100235835 /* SessionGoing+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionGoing+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		A93BE2CE256A3CE3002AF675 /* ComplicatedDataStack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComplicatedDataStack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A93BE2D1256A3CE3002AF675 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A93BE2D3256A3CE3002AF675 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -26,6 +33,9 @@
 		A93BE2DD256A3CE5002AF675 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A93BE2E0256A3CE5002AF675 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A93BE2E2256A3CE5002AF675 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A93BE2E9256A3F01002AF675 /* Session+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Session+CoreDataClass.swift"; sourceTree = "<group>"; };
+		A93BE2EA256A3F01002AF675 /* Session+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Session+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		A9945B62256A60D100E03762 /* DataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSource.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +76,11 @@
 				A93BE2DF256A3CE5002AF675 /* LaunchScreen.storyboard */,
 				A93BE2E2256A3CE5002AF675 /* Info.plist */,
 				A93BE2DA256A3CE3002AF675 /* ComplicatedDataStack.xcdatamodeld */,
+				A93BE2E9256A3F01002AF675 /* Session+CoreDataClass.swift */,
+				A93BE2EA256A3F01002AF675 /* Session+CoreDataProperties.swift */,
+				A922C953256C6E1100235835 /* SessionGoing+CoreDataClass.swift */,
+				A922C954256C6E1100235835 /* SessionGoing+CoreDataProperties.swift */,
+				A9945B62256A60D100E03762 /* DataSource.swift */,
 			);
 			path = ComplicatedDataStack;
 			sourceTree = "<group>";
@@ -140,9 +155,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9945B63256A60D100E03762 /* DataSource.swift in Sources */,
+				A93BE2EC256A3F01002AF675 /* Session+CoreDataProperties.swift in Sources */,
 				A93BE2D6256A3CE3002AF675 /* ViewController.swift in Sources */,
 				A93BE2D2256A3CE3002AF675 /* AppDelegate.swift in Sources */,
+				A922C956256C6E1100235835 /* SessionGoing+CoreDataProperties.swift in Sources */,
 				A93BE2DC256A3CE3002AF675 /* ComplicatedDataStack.xcdatamodeld in Sources */,
+				A93BE2EB256A3F01002AF675 /* Session+CoreDataClass.swift in Sources */,
+				A922C955256C6E1100235835 /* SessionGoing+CoreDataClass.swift in Sources */,
 				A93BE2D4256A3CE3002AF675 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

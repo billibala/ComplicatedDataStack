@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <elements/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17511" systemVersion="20B29" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Session" representedClassName="Session" syncable="YES">
+        <attribute name="endAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="serverID" optional="YES" attributeType="String"/>
+        <attribute name="startAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="SessionGoing" representedClassName="SessionGoing" syncable="YES">
+        <attribute name="reservationStatus" optional="YES" attributeType="String"/>
+        <attribute name="sessionID" optional="YES" attributeType="String"/>
+    </entity>
+    <configuration name="EventContent">
+        <memberEntity name="Session"/>
+    </configuration>
+    <configuration name="UserContent">
+        <memberEntity name="SessionGoing"/>
+    </configuration>
+    <elements>
+        <element name="Session" positionX="-63" positionY="-18" width="128" height="89"/>
+        <element name="SessionGoing" positionX="-63" positionY="9" width="128" height="59"/>
+    </elements>
 </model>
