@@ -49,13 +49,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         storeConfig.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         storeConfig.configuration = "EventContent"
-        container.persistentStoreDescriptions = [storeConfig]
         /**
          Questions:
          * Will get receive this notification on local change? (changes made by the same process)
          * Which thread does the notification handler get invokved?
          */
         storeConfig.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        // Add another store
+        let userDataConfiguration = NSPersistentStoreDescription(url: storeConfig.url!.deletingLastPathComponent().appendingPathComponent("UserContent.sqlite"))
+
+        container.persistentStoreDescriptions = [storeConfig, userDataConfiguration]
         
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
