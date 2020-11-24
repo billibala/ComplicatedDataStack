@@ -67,6 +67,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             print(storeDescription.url!.absoluteString)
             container.viewContext.perform {
+                container.viewContext.automaticallyMergesChangesFromParent = false
                 try! container.viewContext.setQueryGenerationFrom(.current)
             }
         })

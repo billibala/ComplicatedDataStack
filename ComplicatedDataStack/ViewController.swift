@@ -14,8 +14,8 @@ extension UIViewController {
 
 class ViewController: UITableViewController {
 
-    lazy var dataSource: DataSource = {
-        DataSource(container: persistentContainer)
+    lazy var dataController: DataSourceController = {
+        DataSourceController(container: persistentContainer)
     }()
 
     lazy var dateRangeFormatter: DateIntervalFormatter = {
@@ -25,15 +25,10 @@ class ViewController: UITableViewController {
         return fmt
     }()
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(handleNewItem(_:)))
-
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "default-cell")
-
-        let ds: UITableViewDiffableDataSource<Int,Session> = UITableViewDiffableDataSource(tableView: self.tableView) { [unowned self] (table, indexPath, session) -> UITableViewCell? in
+    lazy var myDataSource: UITableViewDiffableDataSource<String, NSManagedObjectID> = {
+        UITableViewDiffableDataSource(tableView: self.tableView) { [unowned self] (table, indexPath, objectID) -> UITableViewCell? in
             let cell = table.dequeueReusableCell(withIdentifier: "default-cell", for: indexPath)
+            let session = self.dataController.fetchedResultsController.managedObjectContext.registeredObject(for: objectID) as! Session
             cell.textLabel?.text = session.name
             if let start = session.startAt, let end = session.endAt {
                 cell.detailTextLabel?.text = self.dateRangeFormatter.string(from: start, to: end)
@@ -42,7 +37,18 @@ class ViewController: UITableViewController {
             }
             return cell
         }
-        tableView.dataSource = ds
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(handleNewItem(_:)))
+
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "default-cell")
+
+        tableView.dataSource = myDataSource
+        dataController.fetchedResultsController.delegate = self
+        try! dataController.fetchedResultsController.performFetch()
     }
 
     @IBAction func handleNewItem(_ sender: Any?) {
@@ -54,3 +60,8 @@ class ViewController: UITableViewController {
     }
 }
 
+extension ViewController: NSFetchedResultsControllerDelegate {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
+        myDataSource.apply(snapshot as NSDiffableDataSourceSnapshot<String,NSManagedObjectID>, animatingDifferences: tableView.numberOfSections != 0)
+    }
+}

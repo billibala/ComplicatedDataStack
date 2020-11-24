@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import UIKit
 
-final class DataSource: NSObject {
+final class DataSourceController: NSObject {
     let persistentContainer: NSPersistentContainer
 
     init(container: NSPersistentContainer) {
@@ -23,6 +23,17 @@ final class DataSource: NSObject {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
+
+    lazy var fetchedResultsController: NSFetchedResultsController<Session> = {
+        let request: NSFetchRequest<Session> = Session.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        request.returnsObjectsAsFaults = false
+        request.fetchBatchSize = 32
+
+        let frc = NSFetchedResultsController(fetchRequest: request, managedObjectContext: persistentContainer.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+
+        return frc
+    }()
 
     @objc
     private func handleContextChangeNotification(_ notification: Notification) {
