@@ -29,11 +29,15 @@
         <!--Navigation Controller-->
         <scene sceneID="epy-ZR-HLi">
             <objects>
-                <navigationController id="Sq4-ek-G6n" sceneMemberID="viewController">
+                <navigationController toolbarHidden="NO" id="Sq4-ek-G6n" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="mIf-qq-6rx">
                         <rect key="frame" x="0.0" y="44" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
+                    <toolbar key="toolbar" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="6Y0-ao-1Fg">
+                        <rect key="frame" x="0.0" y="813" width="414" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </toolbar>
                     <connections>
                         <segue destination="yTk-ww-3EX" kind="relationship" relationship="rootViewController" id="UXc-hc-6U1"/>
                     </connections>
