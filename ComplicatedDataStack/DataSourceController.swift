@@ -16,7 +16,7 @@ final class DataSourceController: NSObject {
         self.persistentContainer = container
         super.init()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(handleContextChangeNotification(_:)), name: .NSManagedObjectContextObjectsDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleContextChangeNotification(_:)), name: .NSManagedObjectContextDidSave, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRemoteChangeNotification(_:)), name: .NSPersistentStoreRemoteChange, object: nil)
     }
 
@@ -38,12 +38,10 @@ final class DataSourceController: NSObject {
     @objc
     private func handleContextChangeNotification(_ notification: Notification) {
         print(#function)
-        dump(notification)
     }
 
     @objc
     private func handleRemoteChangeNotification(_ notification: Notification) {
         print(#function)
-        dump(notification)
     }
 }
