@@ -53,7 +53,9 @@ class ViewController: UITableViewController {
         try! dataController.fetchedResultsController.performFetch()
 
         toolbarItems = [
-            UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(handleJiggleItem(_:)))
+            UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(handleJiggleItem(_:))),
+            UIBarButtonItem(barButtonSystemItem: .pause, target: self, action: #selector(handleMakeBackgroundContextChange(_:))),
+            UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(handleForegroundSave(_:)))
         ]
     }
 
@@ -61,31 +63,48 @@ class ViewController: UITableViewController {
         let item = Session.newRandomSession(context: persistentContainer.viewContext)
         let going = SessionGoing.newRandomGoing(context: persistentContainer.viewContext)
 
-        dump(persistentContainer.viewContext.queryGenerationToken)
-
         try! persistentContainer.viewContext.save()
-
-        dump(persistentContainer.viewContext.queryGenerationToken)
     }
 
     @IBAction func handleJiggleItem(_ sender: Any?) {
         guard let selection = tableView.indexPathForSelectedRow else {
             return
         }
+        dataController.fetchedResultsController.object(at: selection).jiggle()
+    }
+
+    @IBAction func handleMakeBackgroundContextChange(_ sender: Any?) {
+        guard let selection = tableView.indexPathForSelectedRow else {
+            return
+        }
         let session = dataController.fetchedResultsController.object(at: selection)
-        let jiggleLevel = Double.random(in: -1800..<1800)
-        session.startAt?.addTimeInterval(jiggleLevel)
-        session.endAt?.addTimeInterval(jiggleLevel)
+
+        let background = persistentContainer.newBackgroundContext()
+        background.performAndWait {
+            guard let mySession = try? background.existingObject(with: session.objectID) as? Session else {
+                return
+            }
+            mySession.jiggle()
+            try! background.save()
+        }
+    }
+
+    @IBAction func handleForegroundSave(_ sender: Any?) {
+        try! persistentContainer.viewContext.save()
     }
 }
 
 extension ViewController: NSFetchedResultsControllerDelegate {
+    /**
+     Check NSFetchedResultsController.h for more behavioral detail
+     */
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
         if tableView.numberOfSections == 0 {
             // no data in the table yet, so just apply
             myDataSource.apply(snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>, animatingDifferences: false)
         } else {
             var snapshot = snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>
+            // Add the MOID to the "reloaded items" list so that view will refresh.
             snapshot.reloadItems(snapshot.itemIdentifiers)
             myDataSource.apply(snapshot, animatingDifferences: true)
         }

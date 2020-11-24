@@ -22,4 +22,10 @@ public class Session: NSManagedObject {
 
         return theSession
     }
+
+    func jiggle() {
+        let jiggleLevel = Double.random(in: -1800..<1800)
+        startAt?.addTimeInterval(jiggleLevel)
+        endAt?.addTimeInterval(jiggleLevel)
+    }
 }
