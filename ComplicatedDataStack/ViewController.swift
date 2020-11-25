@@ -80,12 +80,15 @@ class ViewController: UITableViewController {
         let session = dataController.fetchedResultsController.object(at: selection)
 
         let background = persistentContainer.newBackgroundContext()
+        background.name = "BackgroundEditor"
         background.performAndWait {
             guard let mySession = try? background.existingObject(with: session.objectID) as? Session else {
                 return
             }
             mySession.jiggle()
+            background.transactionAuthor = "jiggler"
             try! background.save()
+            background.transactionAuthor = nil
         }
     }
 

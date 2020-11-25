@@ -67,6 +67,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             print(storeDescription.url!.absoluteString)
             container.viewContext.perform {
+                /**
+                 Automatically merges changes is great if your app has a small data set.
+
+                 In our case, hundreds of events and thousands of participants are not rare scenario.
+
+                 Automatically merges changes process all changes regardless.
+
+                 On bulk insert, we don't want to merge any change. Since the entire data set has changed, there's no point to look into each change and merge every change into the view context. We just need to refresh or reset the entire view context to reload a fresh set of data.
+                 */
                 container.viewContext.automaticallyMergesChangesFromParent = false
                 try! container.viewContext.setQueryGenerationFrom(.current)
             }

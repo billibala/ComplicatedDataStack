@@ -3,7 +3,7 @@
     <entity name="Session" representedClassName="Session" syncable="YES">
         <attribute name="endAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="serverID" optional="YES" attributeType="String"/>
+        <attribute name="serverID" optional="YES" attributeType="String" preserveAfterDeletion="YES"/>
         <attribute name="startAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
     <entity name="SessionGoing" representedClassName="SessionGoing" syncable="YES">
