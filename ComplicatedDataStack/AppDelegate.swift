@@ -48,7 +48,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         storeConfig.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        storeConfig.configuration = "EventContent"
+//        storeConfig.configuration = "EventContent"
+        storeConfig.configuration = "Default"
         /**
          Questions:
          * Will get receive this notification on local change? (changes made by the same process)
@@ -57,9 +58,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         storeConfig.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
         // Add another store
-        let userDataConfiguration = NSPersistentStoreDescription(url: storeConfig.url!.deletingLastPathComponent().appendingPathComponent("UserContent.sqlite"))
+//        let userDataConfiguration = NSPersistentStoreDescription(url: storeConfig.url!.deletingLastPathComponent().appendingPathComponent("UserContent.sqlite"))
 
-        container.persistentStoreDescriptions = [storeConfig, userDataConfiguration]
+//        container.persistentStoreDescriptions = [storeConfig, userDataConfiguration]
         
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
@@ -78,6 +79,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                  */
                 container.viewContext.automaticallyMergesChangesFromParent = false
                 try! container.viewContext.setQueryGenerationFrom(.current)
+                // To trigger pinning
+                container.viewContext.refreshAllObjects()
             }
         })
         return container

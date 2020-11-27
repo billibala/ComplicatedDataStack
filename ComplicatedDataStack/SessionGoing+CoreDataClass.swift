@@ -18,4 +18,17 @@ public class SessionGoing: NSManagedObject {
 
         return theSession
     }
+
+    static func batchInsert(context: NSManagedObjectContext) {
+        let request = NSBatchInsertRequest(entity: Self.entity(), managedObjectHandler: {
+            let going = $0 as! SessionGoing
+            going.sessionID = UUID().uuidString
+            going.reservationStatus = "reserved"
+
+            return true
+        })
+
+        let insertStatus = try! context.execute(request)
+        dump(insertStatus)
+    }
 }

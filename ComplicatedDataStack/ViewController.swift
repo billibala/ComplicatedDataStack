@@ -54,9 +54,23 @@ class ViewController: UITableViewController {
 
         toolbarItems = [
             UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(handleJiggleItem(_:))),
+            UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(handleForegroundSave(_:))),
+            UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleRefreshFRC(_:))),
+            UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleRefreshObjects(_:))),
+            UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleAdvanceAndRefreshObjects(_:))),
+            UIBarButtonItem(systemItem: .flexibleSpace),
+            UIBarButtonItem(barButtonSystemItem: .compose, target: self, action: #selector(handleBatchInsert(_:))),
             UIBarButtonItem(barButtonSystemItem: .pause, target: self, action: #selector(handleMakeBackgroundContextChange(_:))),
-            UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(handleForegroundSave(_:)))
+            UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(handleBackgroundContextDelete(_:))),
         ]
+    }
+
+    @IBAction func handleRefreshFRC(_ sender: Any?) {
+        print(#function)
+        dataController.resetFRC()
+        dataController.fetchedResultsController.delegate = self
+        try! dataController.fetchedResultsController.performFetch()
+        tableView.reloadData()
     }
 
     @IBAction func handleNewItem(_ sender: Any?) {
@@ -73,14 +87,34 @@ class ViewController: UITableViewController {
         dataController.fetchedResultsController.object(at: selection).jiggle()
     }
 
+    @IBAction func handleRefreshObjects(_ sender: Any?) {
+        print(#function)
+        dump(persistentContainer.viewContext.queryGenerationToken)
+        persistentContainer.viewContext.refreshAllObjects()
+    }
+
+    @IBAction func handleAdvanceAndRefreshObjects(_ sender: Any?) {
+        /**
+         The pattern here does not work for objects inserted from batch insert.
+
+         Those objects are NEW. `refreshAllObjects` only refreshes objects currently registered with the context. That means, in practice, FRC will only get "updates" and "deletes" events.
+
+         If you call `mergeChanges(fromContextDidSave:)` on the context, the behavior is slightly different. "updates", "deletes" and "inserts" are all merge.
+
+         This behavior, while understandable, requires developer to pay extra attention.
+         */
+        print(#function)
+        try! persistentContainer.viewContext.setQueryGenerationFrom(.current)
+        persistentContainer.viewContext.refreshAllObjects()
+    }
+
     @IBAction func handleMakeBackgroundContextChange(_ sender: Any?) {
         guard let selection = tableView.indexPathForSelectedRow else {
             return
         }
         let session = dataController.fetchedResultsController.object(at: selection)
 
-        let background = persistentContainer.newBackgroundContext()
-        background.name = "BackgroundEditor"
+        let background = dataController.backgroundContext
         background.performAndWait {
             guard let mySession = try? background.existingObject(with: session.objectID) as? Session else {
                 return
@@ -92,8 +126,35 @@ class ViewController: UITableViewController {
         }
     }
 
+    @IBAction func handleBackgroundContextDelete(_ sender: Any?) {
+        guard let selection = tableView.indexPathForSelectedRow else {
+            return
+        }
+        let session = dataController.fetchedResultsController.object(at: selection)
+
+        let background = persistentContainer.newBackgroundContext()
+        background.perform {
+            background.batchDelete(objectIDs: [session.objectID])
+        }
+//        let background = dataController.backgroundContext
+//        background.performAndWait {
+//            guard let mySession = try? background.existingObject(with: session.objectID) as? Session else {
+//                return
+//            }
+//
+//            background.delete(mySession)
+//            background.transactionAuthor = "delete"
+//            try! background.save()
+//            background.transactionAuthor = nil
+//        }
+    }
+
     @IBAction func handleForegroundSave(_ sender: Any?) {
         try! persistentContainer.viewContext.save()
+    }
+
+    @IBAction func handleBatchInsert(_ sender: Any?) {
+        Session.batchInsert(context: dataController.backgroundContext)
     }
 }
 
