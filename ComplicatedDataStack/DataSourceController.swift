@@ -60,7 +60,7 @@ final class DataSourceController: NSObject {
 
     @objc
     private func handleContextChangeNotification(_ notification: Notification) {
-        print(#function)
+        print("L\(#line) \(#function)")
         guard let infoDict = notification.userInfo as? [String:Any], let objMOC = notification.object as? NSManagedObjectContext else {
             return
         }
@@ -105,7 +105,7 @@ final class DataSourceController: NSObject {
 
     @objc
     private func handleRemoteChangeNotification(_ notification: Notification) {
-        print(#function)
+        print("L\(#line) \(#function)")
         /**
          NSPersistentStoreRemoteChangeNotification's UserInfo contain 2 keys:
          * NSPersistentStoreURLKey - Store key isn't used in this case since we only have 1 store.
@@ -115,7 +115,7 @@ final class DataSourceController: NSObject {
             assertionFailure()
             return
         }
-        dump(historyToken)
+//        dump(historyToken)
         // with `historyToken`, we can dig up detail of this transaction.
         // for development purpose, where we don't have proper implemenetation to purge old log, we just examine the transaction which triggers this notification handler.
 
@@ -129,6 +129,7 @@ final class DataSourceController: NSObject {
     }
 
     func processHistory(_ historyToken: NSPersistentHistoryToken, context background: NSManagedObjectContext) {
+        return
 //            let transactionRequest = NSPersistentHistoryTransaction.fetchRequest!
 //            transactionRequest.predicate = NSPredicate(format: "contextName = %@", appBackgroundContextName)
 //            transactionRequest.predicate = NSPredicate(format: "token = %@", historyToken)
@@ -176,10 +177,15 @@ final class DataSourceController: NSObject {
                 }
             }
             return true
-        }.forEach {
+        }.forEach { _ in
             // Changes is merged and store generation is advanced on the calling context
+            /**
+             Calling `merge` will advance store generation.
+
+             Do not call merge on view context if we want view updates to be delayed.
+             */
 //            self.persistentContainer.viewContext.mergeChanges(fromContextDidSave: $0.objectIDNotification())
-            background.mergeChanges(fromContextDidSave: $0.objectIDNotification())
+//            background.mergeChanges(fromContextDidSave: $0.objectIDNotification())
         }
     }
 }

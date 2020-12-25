@@ -31,7 +31,15 @@ class ViewController: UITableViewController {
                 UITableViewCell(style: .subtitle, reuseIdentifier: "default-cell")
             }()
             let session = self.dataController.fetchedResultsController.managedObjectContext.registeredObject(for: objectID) as! Session
-            cell.textLabel?.text = session.name
+
+            if session.isDeleted {
+                print("session deleted: \(session.objectID)")
+                return cell
+            }
+
+            let idx = session.name!.firstIndex(of: "-") ?? session.name!.endIndex
+
+            cell.textLabel?.text = "\(session.name![..<idx])-\(session.objectID.uriRepresentation().lastPathComponent)"
             if let start = session.startAt, let end = session.endAt {
                 cell.detailTextLabel?.text = self.dateRangeFormatter.string(from: start, to: end)
             } else {
@@ -52,21 +60,25 @@ class ViewController: UITableViewController {
         dataController.fetchedResultsController.delegate = self
         try! dataController.fetchedResultsController.performFetch()
 
+        let btn = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(handleBackgroundDelete(_:)))
+        btn.tintColor = UIColor.green
+
         toolbarItems = [
             UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(handleJiggleItem(_:))),
             UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(handleForegroundSave(_:))),
-            UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleRefreshFRC(_:))),
+            UIBarButtonItem(barButtonSystemItem: .redo, target: self, action: #selector(handleRefreshFRC(_:))),
             UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleRefreshObjects(_:))),
             UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleAdvanceAndRefreshObjects(_:))),
             UIBarButtonItem(systemItem: .flexibleSpace),
             UIBarButtonItem(barButtonSystemItem: .compose, target: self, action: #selector(handleBatchInsert(_:))),
             UIBarButtonItem(barButtonSystemItem: .pause, target: self, action: #selector(handleMakeBackgroundContextChange(_:))),
-            UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(handleBackgroundContextDelete(_:))),
+            UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(handleBatchDelete(_:))),
+            btn
         ]
     }
 
     @IBAction func handleRefreshFRC(_ sender: Any?) {
-        print(#function)
+        print("L\(#line) reset FRC")
         dataController.resetFRC()
         dataController.fetchedResultsController.delegate = self
         try! dataController.fetchedResultsController.performFetch()
@@ -74,6 +86,7 @@ class ViewController: UITableViewController {
     }
 
     @IBAction func handleNewItem(_ sender: Any?) {
+        print("L\(#line) Add new item to `view context`")
         let item = Session.newRandomSession(context: persistentContainer.viewContext)
         let going = SessionGoing.newRandomGoing(context: persistentContainer.viewContext)
 
@@ -84,12 +97,13 @@ class ViewController: UITableViewController {
         guard let selection = tableView.indexPathForSelectedRow else {
             return
         }
+        print("L\(#line) jiggle selected item in `view context`")
         dataController.fetchedResultsController.object(at: selection).jiggle()
     }
 
     @IBAction func handleRefreshObjects(_ sender: Any?) {
-        print(#function)
-        dump(persistentContainer.viewContext.queryGenerationToken)
+        print("L\(#line) viewContext.refreshAllObjects()")
+//        dump(persistentContainer.viewContext.queryGenerationToken)
         persistentContainer.viewContext.refreshAllObjects()
     }
 
@@ -103,7 +117,7 @@ class ViewController: UITableViewController {
 
          This behavior, while understandable, requires developer to pay extra attention.
          */
-        print(#function)
+        print("L\(#line) advance to current generation. And call viewContext.refreshAllObjects()")
         try! persistentContainer.viewContext.setQueryGenerationFrom(.current)
         persistentContainer.viewContext.refreshAllObjects()
     }
@@ -112,6 +126,7 @@ class ViewController: UITableViewController {
         guard let selection = tableView.indexPathForSelectedRow else {
             return
         }
+        print("L\(#line) jiggle selected item in `background context` and save()")
         let session = dataController.fetchedResultsController.object(at: selection)
 
         let background = dataController.backgroundContext
@@ -126,10 +141,30 @@ class ViewController: UITableViewController {
         }
     }
 
-    @IBAction func handleBackgroundContextDelete(_ sender: Any?) {
+    @IBAction func handleBackgroundDelete(_ sender: Any?) {
         guard let selection = tableView.indexPathForSelectedRow else {
             return
         }
+        print("L\(#line) background delete selected item")
+        let session = dataController.fetchedResultsController.object(at: selection)
+
+        let background = dataController.backgroundContext
+        background.performAndWait {
+            guard let mySession = try? background.existingObject(with: session.objectID) as? Session else {
+                return
+            }
+            background.delete(mySession)
+            background.transactionAuthor = "delete"
+            try! background.save()
+            background.transactionAuthor = nil
+        }
+    }
+
+    @IBAction func handleBatchDelete(_ sender: Any?) {
+        guard let selection = tableView.indexPathForSelectedRow else {
+            return
+        }
+        print("L\(#line) batch delete selected item")
         let session = dataController.fetchedResultsController.object(at: selection)
 
         let background = persistentContainer.newBackgroundContext()
@@ -150,10 +185,12 @@ class ViewController: UITableViewController {
     }
 
     @IBAction func handleForegroundSave(_ sender: Any?) {
+        print("L\(#line) save `view context`")
         try! persistentContainer.viewContext.save()
     }
 
     @IBAction func handleBatchInsert(_ sender: Any?) {
+        print("L\(#line) batch insert")
         Session.batchInsert(context: dataController.backgroundContext)
     }
 }
@@ -163,6 +200,7 @@ extension ViewController: NSFetchedResultsControllerDelegate {
      Check NSFetchedResultsController.h for more behavioral detail
      */
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
+        print("FRC snapshot did change delegate method")
         if tableView.numberOfSections == 0 {
             // no data in the table yet, so just apply
             myDataSource.apply(snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>, animatingDifferences: false)
