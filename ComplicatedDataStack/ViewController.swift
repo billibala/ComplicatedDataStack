@@ -64,9 +64,9 @@ class ViewController: UITableViewController {
         btn.tintColor = UIColor.green
 
         toolbarItems = [
-            UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(handleJiggleItem(_:))),
+            UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(handleResetContext(_:))),
             UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(handleForegroundSave(_:))),
-            UIBarButtonItem(barButtonSystemItem: .redo, target: self, action: #selector(handleRefreshFRC(_:))),
+            UIBarButtonItem(barButtonSystemItem: .bookmarks, target: self, action: #selector(handleRefreshFRC(_:))),
             UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleRefreshObjects(_:))),
             UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleAdvanceAndRefreshObjects(_:))),
             UIBarButtonItem(systemItem: .flexibleSpace),
@@ -91,6 +91,11 @@ class ViewController: UITableViewController {
         let going = SessionGoing.newRandomGoing(context: persistentContainer.viewContext)
 
         try! persistentContainer.viewContext.save()
+    }
+
+    @IBAction func handleResetContext(_ sender: Any?) {
+        print("reset `view context`")
+        persistentContainer.viewContext.reset()
     }
 
     @IBAction func handleJiggleItem(_ sender: Any?) {
@@ -205,10 +210,10 @@ extension ViewController: NSFetchedResultsControllerDelegate {
             // no data in the table yet, so just apply
             myDataSource.apply(snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>, animatingDifferences: false)
         } else {
-            var snapshot = snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>
+//            var snapshot = snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>
             // Add the MOID to the "reloaded items" list so that view will refresh.
-            snapshot.reloadItems(snapshot.itemIdentifiers)
-            myDataSource.apply(snapshot, animatingDifferences: true)
+//            snapshot.reloadItems(snapshot.itemIdentifiers)
+            myDataSource.apply(snapshot as! NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>, animatingDifferences: true)
         }
 //        myDataSource.apply(snapshot as NSDiffableDataSourceSnapshot<Int,NSManagedObjectID>, animatingDifferences: tableView.numberOfSections != 0)
     }
