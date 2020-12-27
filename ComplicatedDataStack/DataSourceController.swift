@@ -173,8 +173,7 @@ final class DataSourceController: NSObject {
 //            let transactionResult = try! background.execute(transactionRequest)
 //            dump(transactionResult)
 
-        let nilToken: NSPersistentHistoryToken? = nil
-        let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: nilToken)
+        let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: historyToken)
 //            changeRequest.fetchRequest = transactionRequest
         changeRequest.resultType = .transactionsAndChanges
         guard let changeResult = try! background.execute(changeRequest) as? NSPersistentHistoryResult, let theHistory = changeResult.result as? [NSPersistentHistoryTransaction] else {
@@ -211,14 +210,17 @@ final class DataSourceController: NSObject {
                 }
             }
             return true
-        }.forEach { _ in
+        }.forEach {
             // Changes is merged and store generation is advanced on the calling context
             /**
              Calling `merge` will advance store generation.
 
              Do not call merge on view context if we want view updates to be delayed.
              */
-//            self.persistentContainer.viewContext.mergeChanges(fromContextDidSave: $0.objectIDNotification())
+            let fakeNotification = $0.objectIDNotification()
+//            self.persistentContainer.viewContext.perform {
+//                self.persistentContainer.viewContext.mergeChanges(fromContextDidSave: fakeNotification)
+//            }
 //            background.mergeChanges(fromContextDidSave: $0.objectIDNotification())
         }
     }
