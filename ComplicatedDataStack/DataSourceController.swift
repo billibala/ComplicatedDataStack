@@ -31,6 +31,7 @@ final class DataSourceController: NSObject {
         let context = persistentContainer.newBackgroundContext()
         context.name = appBackgroundContextName
 //        try! context.setQueryGenerationFrom(.current)
+        context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         return context
     }()
 

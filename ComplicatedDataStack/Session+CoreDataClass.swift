@@ -65,4 +65,35 @@ extension NSManagedObjectContext {
         let result = try! execute(request) as! NSBatchDeleteResult
         dump(result.result as! NSNumber)
     }
+
+    func batchUpdate(uniqueID: String) {
+//        let startDate = Date(timeIntervalSinceNow: Double.random(in: -3600..<3600))
+//        let request = NSBatchInsertRequest(entityName: "Session", objects: [
+//            [
+//                "name" : UUID().uuidString,
+//                "startAt" : startDate,
+//                "endAt" : startDate.addingTimeInterval(Double.random(in: 0..<3600*3)),
+//                "serverID" : uniqueID
+//            ]
+//        ])
+        var loopIdx = 0
+
+        let request = NSBatchInsertRequest(entity: Session.entity(), managedObjectHandler: {
+            guard loopIdx < 1 else {
+                return true
+            }
+
+            let theSession = $0 as! Session
+            theSession.name = UUID().uuidString
+            let startDate = Date(timeIntervalSinceNow: Double.random(in: -3600..<3600))
+            let endDate = startDate.addingTimeInterval(Double.random(in: 0..<3600*3))
+            theSession.startAt = startDate
+            theSession.endAt = endDate
+            theSession.serverID = uniqueID
+
+            loopIdx += 1
+            return false
+        })
+        _ = try! execute(request)
+    }
 }
