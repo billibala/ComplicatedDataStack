@@ -15,7 +15,18 @@ final class DataSourceController: NSObject {
      */
     private let appBackgroundContextName = "MainAppBackgroundEditor"
     let persistentContainer: NSPersistentContainer
-    private(set) var lastToken: NSPersistentHistoryToken? = nil
+    private(set) var lastToken: NSPersistentHistoryToken? = nil {
+        didSet {
+            guard let token = lastToken else {
+                // attempt to delete token file
+                try? FileManager.default.removeItem(at: tokenPath())
+                return
+            }
+
+            // save the file
+            try! token.write(to: tokenPath())
+        }
+    }
     lazy var backgroundContext: NSManagedObjectContext = {
         let context = persistentContainer.newBackgroundContext()
         context.name = appBackgroundContextName
@@ -23,12 +34,37 @@ final class DataSourceController: NSObject {
         return context
     }()
 
-    init(container: NSPersistentContainer) {
+    private func tokenPath() throws -> URL {
+        let parentFolder = try persistentContainer.persistentStoreDescriptions.first?.url?.deletingLastPathComponent() ?? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: Bundle.main.bundleURL, create: true)
+
+        return parentFolder.appendingPathComponent("persistent-history-token")
+    }
+
+    init(container: NSPersistentContainer) throws {
         self.persistentContainer = container
         super.init()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(self.handleContextChangeNotification(_:)), name: .NSManagedObjectContextDidSave, object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(self.handleContextChangeNotification(_:)), name: .NSManagedObjectContextDidSave, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRemoteChangeNotification(_:)), name: .NSPersistentStoreRemoteChange, object: container.persistentStoreCoordinator)
+
+        // On app launch, app loads data from the newest state.
+        // So, update the "last token" to the current token.
+        let context = backgroundContext
+        context.perform {
+            self.lastToken = NSPersistentHistoryToken.fetchLatestToken(in: context)
+        }
+//        do {
+//            let tokenData = try Data(contentsOf: tokenPath())
+//            lastToken = try NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
+//        } catch {
+//            let myError = error as NSError
+//            switch myError.code {
+//            case NSFileNoSuchFileError, NSFileReadNoSuchFileError:
+//                break
+//            default:
+//                throw error
+//            }
+//        }
     }
 
     deinit {
@@ -58,63 +94,59 @@ final class DataSourceController: NSObject {
         _frc = nil
     }
 
-    @objc
-    private func handleContextChangeNotification(_ notification: Notification) {
-        print("L\(#line) \(#function)")
-        guard let infoDict = notification.userInfo as? [String:Any], let objMOC = notification.object as? NSManagedObjectContext else {
-            return
-        }
-
-        print("main thread? \(Thread.isMainThread)")
-        infoDict.forEach { kvPair in
-            let (keyStr, value) = kvPair
-            guard let key = NSManagedObjectContext.NotificationKey(rawValue: keyStr) else {
-                return
-            }
-            switch key {
-            case .insertedObjects:
-                print("inserted")
-                if let items = value as? Set<NSManagedObject> {
-                    print("insert: \(items.count)")
-                }
-            case .updatedObjects:
-                print("updated")
-                if let items = value as? Set<NSManagedObject> {
-                    print("updated: \(items.count)")
-                }
-            case .deletedObjects:
-                /**
-                 Decide if we can call "refresh all objects" on the view context.
-
-                 If the deleted object is currently the main subject of a detail view, we cannot advance the store generation until that view is unwound.
-                 */
-                print("deleted")
-                if let items = value as? Set<NSManagedObject> {
-                    print("deleted: \(items.count)")
-                }
-            default:
-//                assertionFailure()
-                print(key.rawValue)
-                dump(value)
-                break
-            }
-        }
-
-//        persistentContainer.viewContext.mergeChanges(fromContextDidSave: notification)
-    }
+//    @objc
+//    private func handleContextChangeNotification(_ notification: Notification) {
+//        print("L\(#line) \(#function)")
+//        guard let infoDict = notification.userInfo as? [String:Any], let objMOC = notification.object as? NSManagedObjectContext else {
+//            return
+//        }
+//
+//        print("main thread? \(Thread.isMainThread)")
+//        infoDict.forEach { kvPair in
+//            let (keyStr, value) = kvPair
+//            guard let key = NSManagedObjectContext.NotificationKey(rawValue: keyStr) else {
+//                return
+//            }
+//            switch key {
+//            case .insertedObjects:
+//                print("inserted")
+//                if let items = value as? Set<NSManagedObject> {
+//                    print("insert: \(items.count)")
+//                }
+//            case .updatedObjects:
+//                print("updated")
+//                if let items = value as? Set<NSManagedObject> {
+//                    print("updated: \(items.count)")
+//                }
+//            case .deletedObjects:
+//                /**
+//                 Decide if we can call "refresh all objects" on the view context.
+//
+//                 If the deleted object is currently the main subject of a detail view, we cannot advance the store generation until that view is unwound.
+//                 */
+//                print("deleted")
+//                if let items = value as? Set<NSManagedObject> {
+//                    print("deleted: \(items.count)")
+//                }
+//            default:
+////                assertionFailure()
+//                print(key.rawValue)
+//                dump(value)
+//                break
+//            }
+//        }
+//
+////        persistentContainer.viewContext.mergeChanges(fromContextDidSave: notification)
+//    }
 
     @objc
     private func handleRemoteChangeNotification(_ notification: Notification) {
-        print("L\(#line) \(#function)")
+        print("L\(#line) \(#function), main thread: \(Thread.isMainThread)")
         /**
          NSPersistentStoreRemoteChangeNotification's UserInfo contain 2 keys:
          * NSPersistentStoreURLKey - Store key isn't used in this case since we only have 1 store.
          * NSPersistentHistoryTokenKey
          */
-        guard let historyToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken else {
-            assertionFailure()
-            return
-        }
 //        dump(historyToken)
         // with `historyToken`, we can dig up detail of this transaction.
         // for development purpose, where we don't have proper implemenetation to purge old log, we just examine the transaction which triggers this notification handler.
@@ -124,12 +156,14 @@ final class DataSourceController: NSObject {
         // What is "history"? What is "transaction"?
         // Exploring fetch requests
         background.perform {
-            self.processHistory(historyToken, context: background)
+            self.processHistory(self.lastToken, context: background)
+            if let historyToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
+                self.lastToken = historyToken
+            }
         }
     }
 
-    func processHistory(_ historyToken: NSPersistentHistoryToken, context background: NSManagedObjectContext) {
-        return
+    func processHistory(_ historyToken: NSPersistentHistoryToken?, context background: NSManagedObjectContext) {
 //            let transactionRequest = NSPersistentHistoryTransaction.fetchRequest!
 //            transactionRequest.predicate = NSPredicate(format: "contextName = %@", appBackgroundContextName)
 //            transactionRequest.predicate = NSPredicate(format: "token = %@", historyToken)
@@ -138,9 +172,8 @@ final class DataSourceController: NSObject {
 //            let transactionResult = try! background.execute(transactionRequest)
 //            dump(transactionResult)
 
-        let token: NSPersistentHistoryToken? = nil
-
-        let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: token)
+        let nilToken: NSPersistentHistoryToken? = nil
+        let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: nilToken)
 //            changeRequest.fetchRequest = transactionRequest
         changeRequest.resultType = .transactionsAndChanges
         guard let changeResult = try! background.execute(changeRequest) as? NSPersistentHistoryResult, let theHistory = changeResult.result as? [NSPersistentHistoryTransaction] else {
@@ -160,9 +193,9 @@ final class DataSourceController: NSObject {
         print("number of items: \(theHistory.count)")
         theHistory.filter {
             dump($0.token)
-            guard $0.token == historyToken else {
-                return false
-            }
+//            guard $0.token == historyToken else {
+//                return false
+//            }
             $0.changes?.forEach { theChange in
                 switch theChange.changeType {
                 case .insert:
@@ -187,5 +220,36 @@ final class DataSourceController: NSObject {
 //            self.persistentContainer.viewContext.mergeChanges(fromContextDidSave: $0.objectIDNotification())
 //            background.mergeChanges(fromContextDidSave: $0.objectIDNotification())
         }
+    }
+}
+
+extension NSPersistentHistoryToken {
+    func write(to filePath: URL) throws {
+        #warning("Better store it in UserDefault instead")
+        let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: true)
+        try data.write(to: filePath)
+    }
+
+    static func fetchLatestToken(in context: NSManagedObjectContext) -> NSPersistentHistoryToken? {
+        let nilToken: NSPersistentHistoryToken? = nil
+        let storeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: nilToken)
+        storeRequest.fetchRequest = NSPersistentHistoryTransaction.latestTokenFetchRequest
+        storeRequest.resultType = .transactionsOnly
+        guard let result = try! context.execute(storeRequest) as? NSPersistentHistoryResult, let history = result.result as? [NSPersistentHistoryTransaction] else {
+            return nil
+        }
+
+        return history.first?.token
+    }
+
+}
+
+extension NSPersistentHistoryTransaction {
+    static var latestTokenFetchRequest: NSFetchRequest<NSFetchRequestResult> {
+        let request = Self.fetchRequest!
+        request.sortDescriptors = [NSSortDescriptor(key: "TIMESTAMP", ascending: false)]
+        // Fetch Limit does not work. Store request always returns all results
+//        request.fetchLimit = 1
+        return request
     }
 }

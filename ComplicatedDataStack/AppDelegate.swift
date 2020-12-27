@@ -49,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         storeConfig.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
 //        storeConfig.configuration = "EventContent"
-        storeConfig.configuration = "Default"
+//        storeConfig.configuration = "Default"
         /**
          Questions:
          * Will get receive this notification on local change? (changes made by the same process)

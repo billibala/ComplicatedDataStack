@@ -15,7 +15,7 @@ extension UIViewController {
 class ViewController: UITableViewController {
 
     lazy var dataController: DataSourceController = {
-        DataSourceController(container: persistentContainer)
+        try! DataSourceController(container: persistentContainer)
     }()
 
     lazy var dateRangeFormatter: DateIntervalFormatter = {
@@ -71,7 +71,7 @@ class ViewController: UITableViewController {
             UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(handleAdvanceAndRefreshObjects(_:))),
             UIBarButtonItem(systemItem: .flexibleSpace),
             UIBarButtonItem(barButtonSystemItem: .compose, target: self, action: #selector(handleBatchInsert(_:))),
-            UIBarButtonItem(barButtonSystemItem: .pause, target: self, action: #selector(handleMakeBackgroundContextChange(_:))),
+            UIBarButtonItem(barButtonSystemItem: .pause, target: self, action: #selector(handleBatchChange(_:))),
             UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(handleBatchDelete(_:))),
             btn
         ]
@@ -143,6 +143,22 @@ class ViewController: UITableViewController {
             background.transactionAuthor = "jiggler"
             try! background.save()
             background.transactionAuthor = nil
+        }
+    }
+
+    @IBAction func handleBatchChange(_ sender: Any?) {
+        guard let selection = tableView.indexPathForSelectedRow else {
+            return
+        }
+        print("L\(#line) batch jiggle selected item")
+        let session = dataController.fetchedResultsController.object(at: selection)
+        let serverID = session.serverID!
+
+        print("object to update: \(session.objectID) \(serverID)")
+
+        let background = dataController.backgroundContext
+        background.perform {
+            background.batchUpdate(uniqueID: serverID)
         }
     }
 
