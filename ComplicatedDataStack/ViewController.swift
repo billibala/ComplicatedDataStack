@@ -12,6 +12,11 @@ extension UIViewController {
     var persistentContainer: NSPersistentContainer { (UIApplication.shared.delegate as! AppDelegate).persistentContainer }
 }
 
+final class ObservingCell: UITableViewCell {
+    var titleObservation: NSKeyValueObservation? = nil
+    var detailObservation: NSKeyValueObservation? = nil
+}
+
 class ViewController: UITableViewController {
 
     lazy var dataController: DataSourceController = {
@@ -27,8 +32,8 @@ class ViewController: UITableViewController {
 
     lazy var myDataSource: UITableViewDiffableDataSource<Int, NSManagedObjectID> = {
         UITableViewDiffableDataSource(tableView: self.tableView) { [unowned self] (table, indexPath, objectID) -> UITableViewCell? in
-            let cell = table.dequeueReusableCell(withIdentifier: "default-cell") ?? {
-                UITableViewCell(style: .subtitle, reuseIdentifier: "default-cell")
+            let cell: ObservingCell = table.dequeueReusableCell(withIdentifier: "default-cell") as? ObservingCell ?? {
+                ObservingCell(style: .subtitle, reuseIdentifier: "default-cell")
             }()
             let session = self.dataController.fetchedResultsController.managedObjectContext.registeredObject(for: objectID) as! Session
 
@@ -37,14 +42,24 @@ class ViewController: UITableViewController {
                 return cell
             }
 
-            let idx = session.name!.firstIndex(of: "-") ?? session.name!.endIndex
-
-            cell.textLabel?.text = "\(session.name![..<idx])-\(session.objectID.uriRepresentation().lastPathComponent)"
-            if let start = session.startAt, let end = session.endAt {
-                cell.detailTextLabel?.text = self.dateRangeFormatter.string(from: start, to: end)
-            } else {
-                cell.detailTextLabel?.text = nil
+            cell.titleObservation = session.observe(\.name, options: [.initial]) { object, _ in
+                let idx = object.name!.firstIndex(of: "-") ?? object.name!.endIndex
+                cell.textLabel?.text = "\(object.name![..<idx])-\(session.objectID.uriRepresentation().lastPathComponent)"
             }
+            cell.detailObservation = session.observe(\.startAt, options: [.initial]) { [unowned self] object, _ in
+                if let start = object.startAt, let end = object.endAt {
+                    cell.detailTextLabel?.text = self.dateRangeFormatter.string(from: start, to: end)
+                }
+            }
+
+//            let idx = session.name!.firstIndex(of: "-") ?? session.name!.endIndex
+//
+//            cell.textLabel?.text = "\(session.name![..<idx])-\(session.objectID.uriRepresentation().lastPathComponent)"
+//            if let start = session.startAt, let end = session.endAt {
+//                cell.detailTextLabel?.text = self.dateRangeFormatter.string(from: start, to: end)
+//            } else {
+//                cell.detailTextLabel?.text = nil
+//            }
             return cell
         }
     }()
@@ -53,8 +68,6 @@ class ViewController: UITableViewController {
         super.viewDidLoad()
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(handleNewItem(_:)))
-
-//        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "default-cell")
 
         tableView.dataSource = myDataSource
         dataController.fetchedResultsController.delegate = self

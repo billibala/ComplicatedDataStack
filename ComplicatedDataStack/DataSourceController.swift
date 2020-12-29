@@ -218,9 +218,9 @@ final class DataSourceController: NSObject {
              Do not call merge on view context if we want view updates to be delayed.
              */
             let fakeNotification = $0.objectIDNotification()
-//            self.persistentContainer.viewContext.perform {
-//                self.persistentContainer.viewContext.mergeChanges(fromContextDidSave: fakeNotification)
-//            }
+            self.persistentContainer.viewContext.perform {
+                self.persistentContainer.viewContext.mergeChanges(fromContextDidSave: fakeNotification)
+            }
 //            background.mergeChanges(fromContextDidSave: $0.objectIDNotification())
         }
     }
